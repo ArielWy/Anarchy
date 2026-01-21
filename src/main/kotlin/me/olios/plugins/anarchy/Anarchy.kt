@@ -1,54 +1,61 @@
 package me.olios.plugins.anarchy
 
+import me.olios.plugins.anarchy.drops.DropCoordinator
+import me.olios.plugins.anarchy.drops.DropEngine
+import me.olios.plugins.anarchy.drops.item.ItemFactory
+import me.olios.plugins.anarchy.drops.provider.ItemProvider
 import me.olios.plugins.anarchy.generator.GlassChunkGenerator
-import me.olios.plugins.anarchy.listeners.BlockBreakListener
-import me.olios.plugins.anarchy.listeners.BlockPlaceListener
+import me.olios.plugins.anarchy.listeners.GlassBreakListener
+import me.olios.plugins.anarchy.listeners.GlassPlaceListener
 import org.bukkit.Bukkit
+import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.plugin.java.JavaPlugin
 
 class Anarchy : JavaPlugin() {
 
     companion object {
-        // plugin instance
-        private lateinit var instance: Anarchy
-        fun getInstance(): Anarchy = instance
+        lateinit var instance: Anarchy
+            private set
 
-        // world instance
-        var generatedWorldName: String? = null
-        fun getWorldName(): String = generatedWorldName?: "None"
+        // Load this directly from config so it's available immediately
+        var targetWorldName: String = "world"
+            private set
     }
 
+    override fun onLoad() {
+        instance = this
+        saveDefaultConfig()
+        targetWorldName = config.getString("world.name", "world")!!
+    }
 
     override fun onEnable() {
-        // define plugin instance
-        instance = this
 
-        saveDefaultConfig() /* save the config to the plugin folder */
-        registerListeners()
+        val blacklist = config.getStringList("drops.blacklist")
+            .mapNotNull { Material.matchMaterial(it) }
+            .toSet()
+
+        val allowedMaterials = Material.entries
+            .filter { it.isItem && !it.isAir && !blacklist.contains(it) }
+
+        val itemProvider = ItemProvider(allowedMaterials, ItemFactory())
+        val engine = DropEngine(listOf(itemProvider))
+        val coordinator = DropCoordinator(engine, this)
+
+        registerListeners(coordinator)
     }
 
-    override fun getDefaultWorldGenerator(worldName: String, id: String?): ChunkGenerator {
-        // define world gen
+    private fun registerListeners(c: DropCoordinator) {
+        Bukkit.getPluginManager().registerEvents(GlassBreakListener(c), this)
+        Bukkit.getPluginManager().registerEvents(GlassPlaceListener(), this)
+    }
 
-        /* ----------------------DEBUGGING MESSAGE------------------------- */
-        logger.info("RELOAD GLASS WORLD for world: $worldName!")
-        /* ----------------------DEBUGGING MESSAGE------------------------- */
+    override fun getDefaultWorldGenerator(worldName: String, id: String?): ChunkGenerator? {
 
-        if (generatedWorldName == null) { // Store it if not already set
-            generatedWorldName = worldName
-
-            /* ----------------------DEBUGGING MESSAGE------------------------- */
-            logger.info("Anarchy generator targeting world: $generatedWorldName")
-            /* ----------------------DEBUGGING MESSAGE------------------------- */
+        if (worldName == targetWorldName) {
+            return GlassChunkGenerator()
         }
 
-        return GlassChunkGenerator()
+        return super.getDefaultWorldGenerator(worldName, id)
     }
-
-    fun registerListeners() {
-        Bukkit.getPluginManager().registerEvents(BlockBreakListener(), this)
-        Bukkit.getPluginManager().registerEvents(BlockPlaceListener(), this)
-    }
-
 }

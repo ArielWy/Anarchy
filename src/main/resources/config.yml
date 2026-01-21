@@ -1,13 +1,16 @@
 world:
+  name: "world"
   depth: 60
   material: GLASS
 
 drops:
   enabled: true
-  mode: SIMPLE_RANDOM   # future: TABLE, SCRIPTED
+  mode: SIMPLE_RANDOM
   blacklist:
     - BEDROCK
     - COMMAND_BLOCK
+    - BARRIER
+    - AIR
 
 security:
   max-breaks-per-second: 10
