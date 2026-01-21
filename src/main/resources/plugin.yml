@@ -2,3 +2,4 @@ name: Anarchy
 version: '1.0-SNAPSHOT'
 main: me.olios.plugins.anarchy.Anarchy
 api-version: '1.21'
+load: STARTUP
