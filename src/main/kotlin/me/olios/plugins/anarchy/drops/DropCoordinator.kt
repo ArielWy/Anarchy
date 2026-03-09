@@ -16,7 +16,7 @@ class DropCoordinator(
 
         val snapshot = DropSnapshot(
             worldName = ctx.world.name,
-            location = ctx.block.location.clone(),
+            location = ctx.block.location.toCenterLocation().clone(),
             random = ctx.random
         )
 
@@ -36,12 +36,13 @@ class DropCoordinator(
 
     private fun execute(result: DropResult, loc: Location) {
         val world = loc.world ?: return
-        println(" EXECUTE!")
+        // println(" EXECUTE!")
 
         when (result) {
             is DropResult.Item ->
                 result.items.forEach { world.dropItemNaturally(loc, it)
-                println("item: ${it.displayName()}") }
+                // println("item: ${it.displayName()}")
+                }
 
             is DropResult.Mob ->
                 world.spawnEntity(loc, result.type)
