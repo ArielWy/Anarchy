@@ -142,12 +142,6 @@ If you want to propose changes:
 
 ---
 
-## License
-
-
-
----
-
 ## Author
 
-Developed by **Ariel** (olios)
+Developed by **olios**
